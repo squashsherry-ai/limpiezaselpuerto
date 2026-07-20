@@ -31,6 +31,8 @@ export default function AdminPanel({
   const [activeTab, setActiveTab] = useState<'leads' | 'anuncios'>('leads');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterNeighborhood, setFilterNeighborhood] = useState<string>('all');
+  const [filterPaymentStatus, setFilterPaymentStatus] = useState<string>('all');
+  const [filterServiceType, setFilterServiceType] = useState<string>('all');
 
   // Ad & Flyer Generator States
   const [bgImage, setBgImage] = useState<string | null>(null);
@@ -308,7 +310,10 @@ Ahorra tiempo y disfruta de un hogar u oficina brillante con:
   const filteredBookings = bookings.filter((b) => {
     const matchStatus = filterStatus === 'all' || b.status === filterStatus;
     const matchArea = filterNeighborhood === 'all' || b.neighborhood === filterNeighborhood;
-    return matchStatus && matchArea;
+    const bPayment = b.paymentStatus || 'pendiente';
+    const matchPaymentStatus = filterPaymentStatus === 'all' || bPayment === filterPaymentStatus;
+    const matchServiceType = filterServiceType === 'all' || b.serviceType === filterServiceType;
+    return matchStatus && matchArea && matchPaymentStatus && matchServiceType;
   });
 
   const getServiceLabel = (type: ServiceType) => {
@@ -503,6 +508,34 @@ Ahorra tiempo y disfruta de un hogar u oficina brillante con:
                     {uniqueNeighborhoods.map((n) => (
                       <option key={n} value={n}>{n.toUpperCase()}</option>
                     ))}
+                  </select>
+                </div>
+
+                <div>
+                  <select
+                    value={filterPaymentStatus}
+                    onChange={(e) => setFilterPaymentStatus(e.target.value)}
+                    className="bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-slate-300 font-medium focus:outline-none focus:border-sky-500 uppercase tracking-wider text-[10px]"
+                    id="filter-payment-status"
+                  >
+                    <option value="all">TODOS LOS PAGOS</option>
+                    <option value="pendiente">PAGO PENDIENTE</option>
+                    <option value="pagado">PAGADO</option>
+                  </select>
+                </div>
+
+                <div>
+                  <select
+                    value={filterServiceType}
+                    onChange={(e) => setFilterServiceType(e.target.value)}
+                    className="bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-slate-300 font-medium focus:outline-none focus:border-sky-500 uppercase tracking-wider text-[10px]"
+                    id="filter-service-type"
+                  >
+                    <option value="all">TODOS LOS SERVICIOS</option>
+                    <option value="hogar">HOGAR</option>
+                    <option value="oficina">OFICINA</option>
+                    <option value="comunidad">COMUNIDAD</option>
+                    <option value="fin_obra">FIN DE OBRA</option>
                   </select>
                 </div>
               </div>
