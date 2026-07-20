@@ -1,0 +1,6 @@
+{
+  "name": "Limpiezas El Puerto",
+  "description": "Sitio web oficial y generador de anuncios interactivo para Limpiezas El Puerto en El Puerto de Santa María. Captación de clientes con calculadora de presupuestos y panel de control.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
