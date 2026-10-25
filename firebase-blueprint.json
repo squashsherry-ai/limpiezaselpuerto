@@ -1,0 +1,36 @@
+{
+  "entities": {
+    "bookings": {
+      "title": "Bookings",
+      "description": "Solicitudes de reserva y presupuestos de limpieza",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "clientName": { "type": "string" },
+        "phone": { "type": "string" },
+        "email": { "type": "string" },
+        "serviceType": { "type": "string" },
+        "neighborhood": { "type": "string" },
+        "addressLocator": { "type": "string" },
+        "calculatedPrice": { "type": "number" },
+        "squareMeters": { "type": "number" },
+        "frequency": { "type": "string" },
+        "date": { "type": "string" },
+        "time": { "type": "string" },
+        "notes": { "type": "string" },
+        "status": { "type": "string" },
+        "paymentStatus": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["clientName", "phone", "serviceType", "neighborhood"]
+    }
+  },
+  "securityRules": {
+    "bookings": {
+      "read": "true",
+      "create": "true",
+      "update": "true",
+      "delete": "true"
+    }
+  }
+}

@@ -7,9 +7,10 @@ import React, { useState } from 'react';
 import { 
   Users, Trash2, Check, RefreshCw, Calendar, Mail, 
   Phone, MapPin, Tag, SquareSquare, SlidersHorizontal, Download, Sparkles,
-  Palette, Upload, Image as ImageIcon, Copy, LogOut
+  Palette, Upload, Image as ImageIcon, Copy, LogOut, Search, X, Globe, HardDrive
 } from 'lucide-react';
 import { BookingRequest, ServiceType } from '../types';
+import GoogleSitesDriveModal from './GoogleSitesDriveModal';
 
 interface AdminPanelProps {
   bookings: BookingRequest[];
@@ -33,6 +34,8 @@ export default function AdminPanel({
   const [filterNeighborhood, setFilterNeighborhood] = useState<string>('all');
   const [filterPaymentStatus, setFilterPaymentStatus] = useState<string>('all');
   const [filterServiceType, setFilterServiceType] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [isGoogleSitesModalOpen, setIsGoogleSitesModalOpen] = useState<boolean>(false);
 
   // Ad & Flyer Generator States
   const [bgImage, setBgImage] = useState<string | null>(null);
@@ -313,7 +316,18 @@ Ahorra tiempo y disfruta de un hogar u oficina brillante con:
     const bPayment = b.paymentStatus || 'pendiente';
     const matchPaymentStatus = filterPaymentStatus === 'all' || bPayment === filterPaymentStatus;
     const matchServiceType = filterServiceType === 'all' || b.serviceType === filterServiceType;
-    return matchStatus && matchArea && matchPaymentStatus && matchServiceType;
+
+    const term = searchQuery.trim().toLowerCase();
+    const matchSearch = !term || (
+      (b.clientName && b.clientName.toLowerCase().includes(term)) ||
+      (b.id && b.id.toLowerCase().includes(term)) ||
+      (b.addressLocator && b.addressLocator.toLowerCase().includes(term)) ||
+      (b.neighborhood && b.neighborhood.toLowerCase().includes(term)) ||
+      (b.email && b.email.toLowerCase().includes(term)) ||
+      (b.phone && b.phone.toLowerCase().includes(term))
+    );
+
+    return matchStatus && matchArea && matchPaymentStatus && matchServiceType && matchSearch;
   });
 
   const getServiceLabel = (type: ServiceType) => {
@@ -390,6 +404,16 @@ Ahorra tiempo y disfruta de un hogar u oficina brillante con:
               </button>
             )}
             
+            <button
+              onClick={() => setIsGoogleSitesModalOpen(true)}
+              className="flex items-center gap-2 bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white text-[10px] uppercase tracking-widest font-bold py-2.5 px-4 rounded-lg transition-all cursor-pointer shadow-lg shadow-sky-500/10 border border-sky-400/20"
+              id="btn-google-sites-integration"
+              title="Integración con Google Sites y Guardado en Google Drive"
+            >
+              <Globe className="h-3.5 w-3.5" />
+              <span>Google Sites & Drive</span>
+            </button>
+
             {activeTab === 'leads' && (
               <button
                 onClick={handleExportCSV}
@@ -477,71 +501,97 @@ Ahorra tiempo y disfruta de un hogar u oficina brillante con:
               </div>
             </div>
 
-            {/* Filter Toolbar */}
-            <div className="bg-[#121B2A] border border-slate-800 rounded-xl p-4 mt-8 flex flex-col sm:flex-row gap-4 items-center justify-between text-xs">
-              <div className="flex flex-wrap items-center gap-4">
-                <div className="flex items-center gap-1.5 text-slate-400 font-bold uppercase tracking-widest text-[10px]">
-                  <SlidersHorizontal className="h-3.5 w-3.5" />
-                  <span>Filtros:</span>
-                </div>
-
-                <div>
-                  <select
-                    value={filterStatus}
-                    onChange={(e) => setFilterStatus(e.target.value)}
-                    className="bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-slate-300 font-medium focus:outline-none focus:border-sky-500 uppercase tracking-wider text-[10px]"
+            {/* Filter & Search Toolbar */}
+            <div className="bg-[#121B2A] border border-slate-800 rounded-xl p-4 mt-8 space-y-4">
+              {/* Search Bar */}
+              <div className="relative">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Buscar reserva por cliente, dirección, ref. o teléfono..."
+                  className="w-full bg-slate-900 border border-slate-800 rounded-lg pl-10 pr-10 py-2.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition-all font-medium"
+                  id="search-leads-input"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 p-1 rounded-full hover:bg-slate-800 transition-colors cursor-pointer"
+                    title="Limpiar búsqueda"
+                    id="btn-clear-search"
                   >
-                    <option value="all">TODOS LOS ESTADOS</option>
-                    <option value="pendiente">PENDIENTE</option>
-                    <option value="contactado">CONTACTADO</option>
-                    <option value="completado">COMPLETADO</option>
-                  </select>
-                </div>
-
-                <div>
-                  <select
-                    value={filterNeighborhood}
-                    onChange={(e) => setFilterNeighborhood(e.target.value)}
-                    className="bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-slate-300 font-medium focus:outline-none focus:border-sky-500 uppercase tracking-wider text-[10px]"
-                  >
-                    <option value="all">TODAS LAS ZONAS</option>
-                    {uniqueNeighborhoods.map((n) => (
-                      <option key={n} value={n}>{n.toUpperCase()}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <select
-                    value={filterPaymentStatus}
-                    onChange={(e) => setFilterPaymentStatus(e.target.value)}
-                    className="bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-slate-300 font-medium focus:outline-none focus:border-sky-500 uppercase tracking-wider text-[10px]"
-                    id="filter-payment-status"
-                  >
-                    <option value="all">TODOS LOS PAGOS</option>
-                    <option value="pendiente">PAGO PENDIENTE</option>
-                    <option value="pagado">PAGADO</option>
-                  </select>
-                </div>
-
-                <div>
-                  <select
-                    value={filterServiceType}
-                    onChange={(e) => setFilterServiceType(e.target.value)}
-                    className="bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-slate-300 font-medium focus:outline-none focus:border-sky-500 uppercase tracking-wider text-[10px]"
-                    id="filter-service-type"
-                  >
-                    <option value="all">TODOS LOS SERVICIOS</option>
-                    <option value="hogar">HOGAR</option>
-                    <option value="oficina">OFICINA</option>
-                    <option value="comunidad">COMUNIDAD</option>
-                    <option value="fin_obra">FIN DE OBRA</option>
-                  </select>
-                </div>
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
               </div>
 
-              <div className="text-slate-400 uppercase tracking-widest text-[9px] font-bold">
-                Mostrando {filteredBookings.length} de {bookings.length} solicitudes
+              {/* Filters Row */}
+              <div className="flex flex-col sm:flex-row gap-4 items-center justify-between text-xs border-t border-slate-800/80 pt-3">
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className="flex items-center gap-1.5 text-slate-400 font-bold uppercase tracking-widest text-[10px]">
+                    <SlidersHorizontal className="h-3.5 w-3.5" />
+                    <span>Filtros:</span>
+                  </div>
+
+                  <div>
+                    <select
+                      value={filterStatus}
+                      onChange={(e) => setFilterStatus(e.target.value)}
+                      className="bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-slate-300 font-medium focus:outline-none focus:border-sky-500 uppercase tracking-wider text-[10px]"
+                    >
+                      <option value="all">TODOS LOS ESTADOS</option>
+                      <option value="pendiente">PENDIENTE</option>
+                      <option value="contactado">CONTACTADO</option>
+                      <option value="completado">COMPLETADO</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <select
+                      value={filterNeighborhood}
+                      onChange={(e) => setFilterNeighborhood(e.target.value)}
+                      className="bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-slate-300 font-medium focus:outline-none focus:border-sky-500 uppercase tracking-wider text-[10px]"
+                    >
+                      <option value="all">TODAS LAS ZONAS</option>
+                      {uniqueNeighborhoods.map((n) => (
+                        <option key={n} value={n}>{n.toUpperCase()}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <select
+                      value={filterPaymentStatus}
+                      onChange={(e) => setFilterPaymentStatus(e.target.value)}
+                      className="bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-slate-300 font-medium focus:outline-none focus:border-sky-500 uppercase tracking-wider text-[10px]"
+                      id="filter-payment-status"
+                    >
+                      <option value="all">TODOS LOS PAGOS</option>
+                      <option value="pendiente">PAGO PENDIENTE</option>
+                      <option value="pagado">PAGADO</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <select
+                      value={filterServiceType}
+                      onChange={(e) => setFilterServiceType(e.target.value)}
+                      className="bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-slate-300 font-medium focus:outline-none focus:border-sky-500 uppercase tracking-wider text-[10px]"
+                      id="filter-service-type"
+                    >
+                      <option value="all">TODOS LOS SERVICIOS</option>
+                      <option value="hogar">HOGAR</option>
+                      <option value="oficina">OFICINA</option>
+                      <option value="comunidad">COMUNIDAD</option>
+                      <option value="fin_obra">FIN DE OBRA</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="text-slate-400 uppercase tracking-widest text-[9px] font-bold">
+                  Mostrando {filteredBookings.length} de {bookings.length} solicitudes
+                </div>
               </div>
             </div>
 
@@ -970,6 +1020,11 @@ Ahorra tiempo y disfruta de un hogar u oficina brillante con:
         )}
 
       </div>
+
+      <GoogleSitesDriveModal 
+        isOpen={isGoogleSitesModalOpen} 
+        onClose={() => setIsGoogleSitesModalOpen(false)} 
+      />
     </section>
   );
 }

@@ -17,6 +17,7 @@ interface BudgetCalculatorProps {
   onChangeService: (service: ServiceType) => void;
   onSubmitBooking: (booking: Omit<BookingRequest, 'id' | 'createdAt' | 'status'>) => BookingRequest;
   onOpenClientPortal: (email: string) => void;
+  preselectedNeighborhood?: string;
 }
 
 export default function BudgetCalculator({
@@ -24,6 +25,7 @@ export default function BudgetCalculator({
   onChangeService,
   onSubmitBooking,
   onOpenClientPortal,
+  preselectedNeighborhood,
 }: BudgetCalculatorProps) {
   // Calculator States
   const [sqm, setSqm] = useState<number>(() => {
@@ -120,6 +122,13 @@ export default function BudgetCalculator({
       setPlancha(false);
     }
   }, [selectedServiceId]);
+
+  // Sync preselected neighborhood if passed from Hero or CoverageZones
+  useEffect(() => {
+    if (preselectedNeighborhood) {
+      setNeighborhood(preselectedNeighborhood);
+    }
+  }, [preselectedNeighborhood]);
 
   // Frequency Discounts
   const frequencyDetails = {

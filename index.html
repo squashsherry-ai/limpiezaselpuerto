@@ -1,13 +1,131 @@
 <!doctype html>
-<html lang="en">
+<html lang="es" class="scroll-smooth">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>My Google AI Studio App</title>
+    <title>Limpiezas El Puerto | Empresa de Limpieza en El Puerto de Santa María - limpiezaselpuerto.com</title>
+    <meta
+      name="description"
+      content="Empresa líder en servicios integrales de limpieza en El Puerto de Santa María. Limpieza de hogar, oficinas, comunidades, alquiler vacacional y fin de obra. Presupuesto online inmediato en limpiezaselpuerto.com."
+    />
+    <meta name="keywords" content="limpieza el puerto de santa maria, limpiezas el puerto, empresa de limpieza cadiz, limpieza vistahermosa, limpieza valdelagrana, fin de obra el puerto, limpieza oficinas el puerto de santa maria, limpiezaselpuerto.com" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://limpiezaselpuerto.com/" />
+
+    <!-- OpenGraph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://limpiezaselpuerto.com/" />
+    <meta property="og:title" content="Limpiezas El Puerto | Limpieza Profesional en El Puerto de Santa María" />
+    <meta
+      property="og:description"
+      content="Servicios profesionales de limpieza para hogares, empresas, comunidades y alquileres turísticos en El Puerto de Santa María. Calculadora de presupuestos en tiempo real."
+    />
+    <meta property="og:site_name" content="Limpiezas El Puerto" />
+    <meta property="og:locale" content="es_ES" />
+
+    <!-- Twitter / X -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Limpiezas El Puerto - limpiezaselpuerto.com" />
+    <meta
+      name="twitter:description"
+      content="Empresa de limpieza líder en El Puerto de Santa María. Calidad garantizada, personal asegurado y atención 24h."
+    />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%230284c7'><path d='M12 2l2.4 7.2h7.6l-6 4.8 2.4 7.2-6.4-4.8-6.4 4.8 2.4-7.2-6-4.8h7.6z'/></svg>" />
+
+    <!-- Schema.org JSON-LD Structured Data for LocalBusiness & CleaningService -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "HomeAndConstructionBusiness",
+      "name": "Limpiezas El Puerto",
+      "url": "https://limpiezaselpuerto.com/",
+      "telephone": "+34682020758",
+      "email": "info@limpiezaselpuerto.com",
+      "priceRange": "€€",
+      "image": "https://limpiezaselpuerto.com/og-image.jpg",
+      "description": "Empresa especializada en limpieza integral y mantenimiento en El Puerto de Santa María (Cádiz). Hogar, oficinas, comunidades, apartamentos turísticos y limpiezas de fin de obra.",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "Avda Juan Melgarejo, 2",
+        "addressLocality": "El Puerto de Santa María",
+        "addressRegion": "Cádiz",
+        "postalCode": "11500",
+        "addressCountry": "ES"
+      },
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": 36.5986,
+        "longitude": -6.2307
+      },
+      "openingHoursSpecification": [
+        {
+          "@type": "OpeningHoursSpecification",
+          "dayOfWeek": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday",
+            "Sunday"
+          ],
+          "opens": "00:00",
+          "closes": "23:59"
+        }
+      ],
+      "areaServed": [
+        "El Puerto de Santa María",
+        "Vistahermosa",
+        "Valdelagrana",
+        "Fuentebravía",
+        "Las Redes",
+        "Costa Oeste",
+        "El Manantial",
+        "Centro Histórico",
+        "Crevillet",
+        "El Tejar"
+      ],
+      "hasOfferCatalog": {
+        "@type": "OfferCatalog",
+        "name": "Servicios de Limpieza en El Puerto",
+        "itemListElement": [
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Limpieza del Hogar"
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Limpieza de Oficinas y Despachos"
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Mantenimiento de Comunidades de Propietarios"
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Limpieza Fin de Obra y Reformas"
+            }
+          }
+        ]
+      }
+    }
+    </script>
   </head>
-  <body>
+  <body class="bg-slate-50 text-slate-800 antialiased selection:bg-sky-500 selection:text-white">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
-

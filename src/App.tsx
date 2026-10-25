@@ -10,14 +10,22 @@
 
 import React, { useState, useEffect } from 'react';
 import { Sparkles } from 'lucide-react';
+import { collection, doc, onSnapshot, setDoc, updateDoc, deleteDoc, writeBatch } from 'firebase/firestore';
+import { db } from './lib/firebase';
 import Header from './components/Header';
 import Hero from './components/Hero';
 import Services from './components/Services';
 import BudgetCalculator from './components/BudgetCalculator';
 import Testimonials from './components/Testimonials';
+import WhyUs from './components/WhyUs';
+import CoverageZones from './components/CoverageZones';
+import FAQSection from './components/FAQSection';
+import ContactSection from './components/ContactSection';
+import FloatingContact from './components/FloatingContact';
 import AdminPanel from './components/AdminPanel';
 import ClientPortal from './components/ClientPortal';
 import Footer from './components/Footer';
+import GoogleSitesDriveModal from './components/GoogleSitesDriveModal';
 import { BookingRequest, ServiceType, SimulatedEmail } from './types';
 
 // Mock Lead Seeds for initial showcase
@@ -106,6 +114,7 @@ export default function App() {
     }
     return 'hogar';
   });
+  const [selectedNeighborhood, setSelectedNeighborhood] = useState<string>('');
   const [bookings, setBookings] = useState<BookingRequest[]>([]);
   const [isAdminMode, setIsAdminMode] = useState<boolean>(false);
   const [showAdminFeatures, setShowAdminFeatures] = useState<boolean>(false);
@@ -114,30 +123,18 @@ export default function App() {
 
   // Admin Passcode Modal states
   const [isLoginModalOpen, setIsLoginModalOpen] = useState<boolean>(false);
+  const [isGoogleSitesModalOpen, setIsGoogleSitesModalOpen] = useState<boolean>(false);
   const [usernameInput, setUsernameInput] = useState<string>('');
   const [passwordInput, setPasswordInput] = useState<string>('');
   const [loginError, setLoginError] = useState<string>('');
 
-  // Load from localStorage on mount and check secret URL queries
+  // Load from localStorage & subscribe to Firestore bookings
   useEffect(() => {
     const isLocalUnlocked = localStorage.getItem('limpiezas_el_puerto_admin_unlocked') === 'true';
 
     if (isLocalUnlocked) {
       setShowAdminFeatures(true);
       setIsAdminMode(false);
-    }
-
-    const saved = localStorage.getItem('limpiezas_el_puerto_leads');
-    if (saved) {
-      try {
-        setBookings(JSON.parse(saved));
-      } catch (err) {
-        setBookings(initialSeeds);
-      }
-    } else {
-      // Seed initial data so the administrator panel has rich content immediately
-      setBookings(initialSeeds);
-      localStorage.setItem('limpiezas_el_puerto_leads', JSON.stringify(initialSeeds));
     }
 
     const savedEmails = localStorage.getItem('limpiezas_el_puerto_sent_emails');
@@ -149,6 +146,35 @@ export default function App() {
       }
     }
 
+    // Subscribe to Firestore 'bookings' collection
+    const bookingsColRef = collection(db, 'bookings');
+    const unsubscribe = onSnapshot(bookingsColRef, (snapshot) => {
+      if (!snapshot.empty) {
+        const fetchedBookings: BookingRequest[] = snapshot.docs.map((docSnap) => docSnap.data() as BookingRequest);
+        // Sort by createdAt descending if present
+        fetchedBookings.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+        setBookings(fetchedBookings);
+        localStorage.setItem('limpiezas_el_puerto_leads', JSON.stringify(fetchedBookings));
+      } else {
+        // Seed initial data to Firestore if collection is empty
+        initialSeeds.forEach((seed) => {
+          setDoc(doc(db, 'bookings', seed.id), seed).catch((err) =>
+            console.error('Error seeding Firestore booking:', err)
+          );
+        });
+        setBookings(initialSeeds);
+        localStorage.setItem('limpiezas_el_puerto_leads', JSON.stringify(initialSeeds));
+      }
+    }, (error) => {
+      console.warn('Firestore snapshot error, falling back to localStorage:', error);
+      const saved = localStorage.getItem('limpiezas_el_puerto_leads');
+      if (saved) {
+        try { setBookings(JSON.parse(saved)); } catch (e) { setBookings(initialSeeds); }
+      } else {
+        setBookings(initialSeeds);
+      }
+    });
+
     // Keydown listener for shortcut Alt+A / Ctrl+Alt+A to unlock
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.altKey && e.key?.toLowerCase() === 'a') || (e.ctrlKey && e.altKey && e.key?.toLowerCase() === 'a')) {
@@ -158,7 +184,10 @@ export default function App() {
     };
 
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    return () => {
+      unsubscribe();
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, []);
 
   const handleVerifyPassword = (e: React.FormEvent) => {
@@ -219,6 +248,11 @@ export default function App() {
 
     const updated = [fullBooking, ...bookings];
     saveBookings(updated);
+
+    // Save to Firestore
+    setDoc(doc(db, 'bookings', fullBooking.id), fullBooking).catch((err) =>
+      console.error('Error saving booking to Firestore:', err)
+    );
 
     // Helper inside email builder
     const getServiceLabel = (type: ServiceType) => {
@@ -284,6 +318,9 @@ Avda Juan Melgarejo, 2, 11500, El Puerto de Santa María, Cádiz`
   const handleUpdateStatus = (id: string, status: 'pendiente' | 'contactado' | 'completado') => {
     const updated = bookings.map((b) => (b.id === id ? { ...b, status } : b));
     saveBookings(updated);
+    updateDoc(doc(db, 'bookings', id), { status }).catch((err) =>
+      console.error('Error updating status in Firestore:', err)
+    );
   };
 
   // Update payment status
@@ -324,7 +361,6 @@ El Equipo de Coordinación
 Limpiezas El Puerto S.L.
 Teléfono: 682 020 758`
           };
-          // Cannot call handleAddSimulatedEmail directly since we need state updates
           const newEmails = [paymentEmail, ...sentEmails];
           setSentEmails(newEmails);
           localStorage.setItem('limpiezas_el_puerto_sent_emails', JSON.stringify(newEmails));
@@ -334,12 +370,18 @@ Teléfono: 682 020 758`
       return b;
     });
     saveBookings(updated);
+    updateDoc(doc(db, 'bookings', id), { paymentStatus }).catch((err) =>
+      console.error('Error updating paymentStatus in Firestore:', err)
+    );
   };
 
   // Update complete booking from ClientPortal
   const handleUpdateBooking = (updatedBooking: BookingRequest) => {
     const updated = bookings.map((b) => b.id === updatedBooking.id ? updatedBooking : b);
     saveBookings(updated);
+    setDoc(doc(db, 'bookings', updatedBooking.id), updatedBooking, { merge: true }).catch((err) =>
+      console.error('Error updating booking in Firestore:', err)
+    );
   };
 
   // Open Client Portal helper
@@ -356,11 +398,19 @@ Teléfono: 682 020 758`
   const handleDeleteBooking = (id: string) => {
     const updated = bookings.filter((b) => b.id !== id);
     saveBookings(updated);
+    deleteDoc(doc(db, 'bookings', id)).catch((err) =>
+      console.error('Error deleting booking from Firestore:', err)
+    );
   };
 
   // Seed mock data manually if empty
   const handleSeedMockData = () => {
     saveBookings(initialSeeds);
+    initialSeeds.forEach((seed) => {
+      setDoc(doc(db, 'bookings', seed.id), seed).catch((err) =>
+        console.error('Error seeding booking to Firestore:', err)
+      );
+    });
   };
 
   // Scroll Helpers
@@ -404,6 +454,7 @@ Teléfono: 682 020 758`
           setIsClientPortalActive(!isClientPortalActive);
         }}
         isClientPortalActive={isClientPortalActive}
+        onOpenGoogleSitesModal={() => setIsGoogleSitesModalOpen(true)}
       />
 
       {/* Main Container */}
@@ -430,6 +481,10 @@ Teléfono: 682 020 758`
             {/* 1. Hero Promo Section */}
             <Hero
               onScrollToCalculator={() => scrollToSection('calculadora')}
+              onSelectNeighborhood={(neighborhood) => {
+                setSelectedNeighborhood(neighborhood);
+                scrollToSection('calculadora');
+              }}
             />
 
             {/* 2. Professional Services Showcase */}
@@ -440,16 +495,34 @@ Teléfono: 682 020 758`
               }}
             />
 
-            {/* 3. Interactive Budget Calculator & Lead form */}
+            {/* 3. Coverage Zones in El Puerto */}
+            <CoverageZones
+              onSelectZone={(zoneName) => {
+                setSelectedNeighborhood(zoneName);
+                scrollToSection('calculadora');
+              }}
+            />
+
+            {/* 4. Interactive Budget Calculator & Lead form */}
             <BudgetCalculator
               selectedServiceId={selectedService}
               onChangeService={(serviceId) => setSelectedService(serviceId)}
               onSubmitBooking={handleAddBooking}
               onOpenClientPortal={handleOpenClientPortal}
+              preselectedNeighborhood={selectedNeighborhood}
             />
 
-            {/* 5. Client Testimonials & Guarantees */}
+            {/* 5. Why Choose Us & Quality Guarantees */}
+            <WhyUs />
+
+            {/* 6. Client Testimonials & Social Proof */}
             <Testimonials />
+
+            {/* 7. Frequently Asked Questions */}
+            <FAQSection />
+
+            {/* 8. Direct Contact & Office in El Puerto */}
+            <ContactSection />
           </>
         )}
       </main>
@@ -545,6 +618,15 @@ Teléfono: 682 020 758`
           </div>
         </div>
       )}
+
+      {/* Google Sites & Drive Integration Modal */}
+      <GoogleSitesDriveModal
+        isOpen={isGoogleSitesModalOpen}
+        onClose={() => setIsGoogleSitesModalOpen(false)}
+      />
+
+      {/* Floating Action Quick Contact (WhatsApp & Phone) */}
+      {!isAdminMode && !isClientPortalActive && <FloatingContact />}
     </div>
   );
 }
